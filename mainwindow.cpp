@@ -178,13 +178,16 @@ void MainWindow::openFile(){
         int row = -1;
         while(querySeq.next())
             row = querySeq.value(0).toInt();
-        newTable->setRowCount(row);
-        qDebug() << "|- rowCount =" << row;
+        //newTable->setRowCount(row);
+        newTable->setRowCount(0);
+        qDebug() << "|- rowCount from sqlite_sequence =" << row;
 
         // write data in table
         QSqlQuery queryData(QString("SELECT * FROM %1").arg(query->value(0).toString()));
+        qDebug() << "|- rowCount from size =" << queryData.size();
         int currentRow = 0;
         while(queryData.next()){
+            newTable->setRowCount(newTable->rowCount()+1);
             for(int i = 0; i < fieldsNames->size(); i++){
                 if(fieldsType->value(i) == "INTEGER"){
                     QSpinBox *item = new QSpinBox();
