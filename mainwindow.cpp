@@ -296,13 +296,13 @@ void MainWindow::addRow(){
     }
     str.append(") VALUES (");
     for(int i = 0; i < headers.count(); i++){
-        if(dbDetails.at(tables->currentIndex())->at(3)->at((dbDetails.at(tables->currentIndex())->at(0)->indexOf(headers.value(i)))) == "")
+        if(dbDetails.at(tables->currentIndex())->at(3)->at((dbDetails.at(tables->currentIndex())->at(0)->indexOf(headers.value(i)))) != "")
             str.append(dbDetails.at(tables->currentIndex())->at(3)->at((dbDetails.at(tables->currentIndex())->at(0)->indexOf(headers.value(i)))));
         else{
             if(dbDetails.at(tables->currentIndex())->at(1)->at(dbDetails.at(tables->currentIndex())->at(0)->indexOf(headers.value(i))) == "INTEGER")
-                str.append("0");
+                str.append("''");
             else
-                str.append("-");
+                str.append("''");
         }
         if(i != (headers.count() - 1))
             str.append(", ");
@@ -315,13 +315,29 @@ void MainWindow::addRow(){
 
     // QTableWidget
     currentTable->setRowCount(currentTable->rowCount() + 1);
+    qDebug() << "row count:" << currentTable->rowCount();
     for(int i = 0; i < currentTable->columnCount(); i++){
-        if(dbDetails.at(tables->currentIndex())->at(2)->at(i) == "INTEGER"){
+        qDebug() << "i:" << i << "type:" << dbDetails.at(tables->currentIndex())->at(1)->at(i);
+        if(dbDetails.at(tables->currentIndex())->at(1)->at(i) == "INTEGER"){
             QSpinBox *spin = new QSpinBox();
-            spin->setValue(dbDetails.at(tables->currentIndex())->at(3)->at(i).toInt());
+            qDebug() << "primary key:" << primaryKeyIndex.value(tables->currentIndex());
+            if(primaryKeyIndex.value(tables->currentIndex()) == i){
+                db.open();
+                QSqlQuery *query = new QSqlQuery(QString("SELECT * FROM %1 ORDER BY %2 DESC LIMIT 1;")
+                                                 .arg(tables->tabBar()->tabText(tables->currentIndex()))
+                                                 .arg(currentTable->horizontalHeaderItem(i)->text()));
+                while(query->next()){
+                    spin->setValue(query->value(0).toInt());
+                }
+                delete query;
+                db.close();
+            } else {
+                spin->setValue(dbDetails.at(tables->currentIndex())->at(3)->at(i).toInt());
+            }
             if(primaryKeyIndex.value(tables->currentIndex()) == i)
                 spin->setEnabled(false);
             currentTable->setCellWidget(currentTable->rowCount() - 1, i, spin);
+            qDebug() << "row count:" << currentTable->rowCount();
         } else {
             currentTable->setItem(currentTable->rowCount() - 1, i, new QTableWidgetItem());
         }
