@@ -147,7 +147,7 @@ void MainWindow::openFile(){
         dbDetails.append(tableDetails);
 
         QTableWidget *newTable = new QTableWidget();
-        QObject::connect(newTable, SIGNAL(cellClicked(int,int)), this, SLOT(selectSell()));
+        QObject::connect(newTable, SIGNAL(itemClicked(QTableWidgetItem*)), this, SLOT(selectSell()));
         // get columns data (names and count in list 'fields')
         QSqlQuery queryInfo(QString("PRAGMA TABLE_INFO(%1)").arg(query->value(0).toString()));
         while(queryInfo.next()){
@@ -184,11 +184,13 @@ void MainWindow::openFile(){
 
         // write data in table
         QSqlQuery queryData(QString("SELECT * FROM %1").arg(query->value(0).toString()));
-        qDebug() << "|- rowCount from size =" << queryData.size();
+        qDebug() << "|- queryData =" << queryData.lastQuery();
         int currentRow = 0;
         while(queryData.next()){
             newTable->setRowCount(newTable->rowCount()+1);
+            qDebug() << "  |- row =" << currentRow;
             for(int i = 0; i < fieldsNames->size(); i++){
+                qDebug() << "   |- value =" << queryData.value(i).toString();
                 if(fieldsType->value(i) == "INTEGER"){
                     QSpinBox *item = new QSpinBox();
                     item->setValue(queryData.value(i).toInt());
@@ -250,6 +252,7 @@ void MainWindow::openTab(int currentTab){
 
 void MainWindow::selectSell(){
     qDebug() << "Selected sell (" <<  currentTable->currentColumn() << "," << currentTable->currentRow() << ")";
+    currentTable->selectRow(currentTable->currentRow());
     sellSet->setEnabled(true);
     btnSellSave->setEnabled(true);
     btnSellCancel->setEnabled(true);
